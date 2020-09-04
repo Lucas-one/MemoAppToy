@@ -1,25 +1,27 @@
 package com.example.memotoy;
 
-import java.io.Serializable;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-public class Memo implements Serializable {
-
+@Entity
+public class Memo {
+    @PrimaryKey(autoGenerate = true)
     int seq;
-    String maintext;
-    String subtext;
-    int isdone;
+    String mainText;
+    String subText;
+    int isDone;
 
-    public Memo(int seq, String maintext, String subtext, int isdone) {
-        this.seq = seq;
-        this.maintext = maintext;
-        this.subtext = subtext;
-        this.isdone = isdone;
-    }
+//    public Memo(int seq, String mainText, String subText, int isDone) {
+//        this.seq = seq;
+//        this.mainText = mainText;
+//        this.subText = subText;
+//        this.isDone = isDone;
+//    }
 
-    public Memo(String maintext, String subtext, int isdone) {
-        this.maintext = maintext;   //메모
-        this.subtext = subtext;     //날짜
-        this.isdone = isdone;       //완료 여부
+    public Memo(String mainText, String subText, int isDone) {
+        this.mainText = mainText;
+        this.subText = subText;
+        this.isDone = isDone;
     }
 
     public int getSeq() {
@@ -30,27 +32,27 @@ public class Memo implements Serializable {
         this.seq = seq;
     }
 
-    public String getMaintext() {
-        return maintext;
+    public String getMainText() {
+        return mainText;
     }
 
-    public void setMaintext(String maintext) {
-        this.maintext = maintext;
+    public void setMainText(String mainText) {
+        this.mainText = mainText;
     }
 
-    public String getSubtext() {
-        return subtext;
+    public String getSubText() {
+        return subText;
     }
 
-    public void setSubtext(String subtext) {
-        this.subtext = subtext;
+    public void setSubText(String subText) {
+        this.subText = subText;
     }
 
-    public int getIsdone() {
-        return isdone;
+    public int getIsDone() {
+        return isDone;
     }
 
-    public void setIsdone(int isdone) {
-        this.isdone = isdone;
+    public void setIsDone(int isDone) {
+        this.isDone = isDone;
     }
 }

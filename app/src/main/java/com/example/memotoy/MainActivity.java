@@ -4,10 +4,11 @@ package com.example.memotoy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 
-import android.Manifest;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -16,49 +17,61 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.ArrayList;
+import com.example.memotoy.databinding.ActivityMainBinding;
+
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    SQLiteHelper dbHelper;
-
+    //SQLiteHelper dbHelper;
+    private AppDatabase db;
+    private ActivityMainBinding binding;
     RecyclerView recyclerView;
+
     RecyclerAdapter recyclerAdapter;
-    Button btnAdd;
+    //Button btnAdd;
 
     List<Memo> memoList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        recyclerView = binding.recyclerview;
 
-        dbHelper = new SQLiteHelper(MainActivity.this);
-        memoList = dbHelper.selectAll();
+        //dbHelper = new SQLiteHelper(MainActivity.this);
+        //memoList = dbHelper.selectAll();
 
-        recyclerView = findViewById(R.id.recyclerview);
+        //데이터베이스 생성
+        db = Room.databaseBuilder(this, AppDatabase.class, "MemoDB")
+                .allowMainThreadQueries()
+                .build();
 
+        memoList = db.memoDao().getAll();
+
+        //LinearLaoutManager를 통해 레이아웃 모양 결정
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
         recyclerAdapter = new RecyclerAdapter(memoList);
         recyclerView.setAdapter(recyclerAdapter);
-        btnAdd = findViewById(R.id.btnAdd);
 
-        btnAdd.setOnClickListener(new View.OnClickListener() {
+        // 새로운 메모 작성
+        binding.btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 새로운 메모 작성
+
                 Intent intent = new Intent(MainActivity.this, AddActivity.class);
                 startActivityForResult(intent, 0);
             }
         });
+
     }
 
+    //Intent 끝난 후, Intent에 포함된 데이터를 가지고 onActivityResult 실행된다.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -71,8 +84,8 @@ public class MainActivity extends AppCompatActivity {
             recyclerAdapter.addItem(memo);
             recyclerAdapter.notifyDataSetChanged();
 
-            dbHelper.insertMemo(memo);
-
+            //dbHelper.insertMemo(memo);
+            db.memoDao().insert(memo);
         }
     }
 
@@ -80,10 +93,12 @@ public class MainActivity extends AppCompatActivity {
 
         private List<Memo> listdata;
 
+
         public RecyclerAdapter(List<Memo> listdata){
             this.listdata = listdata;
         }
 
+        //RecyclerAdapter에서 extends ItemViewHolder Override한다.
         @NonNull
         @Override
         public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
@@ -96,20 +111,25 @@ public class MainActivity extends AppCompatActivity {
             return listdata.size();
         }
 
+        //onBindViewHolder로 연결한다.
         @Override
-        public void onBindViewHolder(@NonNull ItemViewHolder itemViewHolder, int i) {
-            Memo memo = listdata.get(i);
+        public void onBindViewHolder(@NonNull ItemViewHolder itemViewHolder, int i)  {
+
+            final Memo memo = listdata.get(i);
 
             itemViewHolder.mainText.setTag(memo.getSeq());
 
-            itemViewHolder.mainText.setText(memo.getMaintext());
-            itemViewHolder.subText.setText(memo.getSubtext());
+            itemViewHolder.mainText.setText(memo.getMainText());
+            itemViewHolder.subText.setText(memo.getSubText());
 
-            if (memo.getIsdone() == 0){
+            if (memo.getIsDone() == 0){
                 itemViewHolder.img.setBackgroundColor(Color.LTGRAY);
-            }else{
+            }else if (memo.getIsDone() == 1){
                 itemViewHolder.img.setBackgroundColor(Color.GREEN);
+            }else if (memo.getIsDone() == 2){
+                itemViewHolder.img.setBackgroundColor(Color.MAGENTA);
             }
+
         }
 
         void addItem(Memo memo){
@@ -124,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
             private TextView subText;
             private ImageView img;
 
-            public ItemViewHolder(@NonNull View itemView){
+            public ItemViewHolder(@NonNull final View itemView){
                 super(itemView);
 
                 mainText = itemView.findViewById(R.id.item_maintext);
@@ -137,14 +157,31 @@ public class MainActivity extends AppCompatActivity {
 
                         int position = getAdapterPosition();
                         int seq = (int)mainText.getTag();
-
                         if(position != RecyclerView.NO_POSITION){
-                            dbHelper.deleteMemo(seq);
+                            //dbHelper.deleteMemo(seq);
+                            //db.memoDao().delete();
+                            db.memoDao().deleteBySeq(seq);
                             removeItem(position);
                             notifyDataSetChanged();
                         }
-
                         return false;
+                    }
+                });
+
+                img.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int position = getAdapterPosition();
+                        int seq = (int)mainText.getTag();
+                        if(position != RecyclerView.NO_POSITION){
+                            Memo nowMemo = db.memoDao().selectBySeq(seq);
+                            int nextNum = nowMemo.getIsDone() + 1;
+                            //Toast.makeText(getApplicationContext(), "nextNum : " + nextNum + "seq : " + seq , Toast.LENGTH_LONG).show();
+                            if (nextNum > 2)
+                                nextNum = 0;
+                            db.memoDao().updateIsDone(seq, nextNum);
+                            notifyDataSetChanged();
+                        }
                     }
                 });
 
