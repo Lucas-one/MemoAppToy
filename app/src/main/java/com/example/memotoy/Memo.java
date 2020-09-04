@@ -1,15 +1,33 @@
 package com.example.memotoy;
 
-public class Memo {
+import java.io.Serializable;
 
+public class Memo implements Serializable {
+
+    int seq;
     String maintext;
     String subtext;
     int isdone;
 
-    public Memo(String maintext, String subtext, int isdone) {
+    public Memo(int seq, String maintext, String subtext, int isdone) {
+        this.seq = seq;
         this.maintext = maintext;
         this.subtext = subtext;
         this.isdone = isdone;
+    }
+
+    public Memo(String maintext, String subtext, int isdone) {
+        this.maintext = maintext;   //메모
+        this.subtext = subtext;     //날짜
+        this.isdone = isdone;       //완료 여부
+    }
+
+    public int getSeq() {
+        return seq;
+    }
+
+    public void setSeq(int seq) {
+        this.seq = seq;
     }
 
     public String getMaintext() {
