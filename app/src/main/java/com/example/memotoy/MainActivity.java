@@ -4,8 +4,10 @@ package com.example.memotoy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 
 import android.Manifest;
 import android.content.Intent;
@@ -19,35 +21,47 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.memotoy.databinding.ActivityMainBinding;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    SQLiteHelper dbHelper;
-
+    //SQLiteHelper dbHelper;
+    private AppDatabase db;
+    private ActivityMainBinding binding;
     RecyclerView recyclerView;
+
     RecyclerAdapter recyclerAdapter;
     Button btnAdd;
 
-    List<Memo> memoList;
+    List<MemoYJ> memoList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+       // setContentView(R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        btnAdd = binding.btnAdd;
+        recyclerView = binding.recyclerview;
 
-        dbHelper = new SQLiteHelper(MainActivity.this);
-        memoList = dbHelper.selectAll();
+        //dbHelper = new SQLiteHelper(MainActivity.this);
+        //memoList = dbHelper.selectAll();
 
-        recyclerView = findViewById(R.id.recyclerview);
+        db = Room.databaseBuilder(this, AppDatabase.class, "MemoDB")
+                .allowMainThreadQueries()
+                .build();
+        memoList = db.memoYJDao().getAll();
+
+        //recyclerView = findViewById(R.id.recyclerview);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
         recyclerAdapter = new RecyclerAdapter(memoList);
         recyclerView.setAdapter(recyclerAdapter);
-        btnAdd = findViewById(R.id.btnAdd);
+        //btnAdd = findViewById(R.id.btnAdd);
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,20 +81,20 @@ public class MainActivity extends AppCompatActivity {
             String strMain = data.getStringExtra("main");
             String strSub = data.getStringExtra("sub");
 
-            Memo memo = new Memo(strMain, strSub, 0);
+            MemoYJ memo = new MemoYJ(strMain, strSub, 0);
             recyclerAdapter.addItem(memo);
             recyclerAdapter.notifyDataSetChanged();
 
-            dbHelper.insertMemo(memo);
-
+            //dbHelper.insertMemo(memo);
+            db.memoYJDao().insert(memo);
         }
     }
 
     class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ItemViewHolder>{
 
-        private List<Memo> listdata;
+        private List<MemoYJ> listdata;
 
-        public RecyclerAdapter(List<Memo> listdata){
+        public RecyclerAdapter(List<MemoYJ> listdata){
             this.listdata = listdata;
         }
 
@@ -98,21 +112,21 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull ItemViewHolder itemViewHolder, int i) {
-            Memo memo = listdata.get(i);
+            MemoYJ memo = listdata.get(i);
 
             itemViewHolder.mainText.setTag(memo.getSeq());
 
-            itemViewHolder.mainText.setText(memo.getMaintext());
-            itemViewHolder.subText.setText(memo.getSubtext());
+            itemViewHolder.mainText.setText(memo.getMainText());
+            itemViewHolder.subText.setText(memo.getSubText());
 
-            if (memo.getIsdone() == 0){
+            if (memo.getIsDone() == 0){
                 itemViewHolder.img.setBackgroundColor(Color.LTGRAY);
             }else{
                 itemViewHolder.img.setBackgroundColor(Color.GREEN);
             }
         }
 
-        void addItem(Memo memo){
+        void addItem(MemoYJ memo){
             listdata.add(memo);
         }
         void removeItem(int position){
@@ -137,9 +151,9 @@ public class MainActivity extends AppCompatActivity {
 
                         int position = getAdapterPosition();
                         int seq = (int)mainText.getTag();
-
                         if(position != RecyclerView.NO_POSITION){
-                            dbHelper.deleteMemo(seq);
+                            //dbHelper.deleteMemo(seq);
+                            //db.memoYJDao().delete();
                             removeItem(position);
                             notifyDataSetChanged();
                         }

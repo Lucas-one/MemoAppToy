@@ -1,6 +1,7 @@
 package com.example.memotoy;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,24 +9,26 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.memotoy.databinding.ActivityAddBinding;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class AddActivity extends AppCompatActivity {
 
-    EditText editText;
 
+    private ActivityAddBinding binding;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add);
+        //setContentView(R.layout.activity_add);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_add);
+        //editText = findViewById(R.id.editMemo);
 
-        editText = findViewById(R.id.editMemo);
-
-        findViewById(R.id.btnDone).setOnClickListener(new View.OnClickListener() {
+        binding.btnDone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String str = editText.getText().toString();
+                String str = binding.editMemo.getText().toString();
 
                 if(str.length() > 0){
                     Date date = new Date();
@@ -44,7 +47,7 @@ public class AddActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.btnNo).setOnClickListener(new View.OnClickListener() {
+        binding.btnNo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
